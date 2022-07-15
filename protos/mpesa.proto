@@ -1,0 +1,606 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package kash.services;
+
+service Mpesa {
+    rpc Authorization(AuthorizationRequest) returns (AuthorizationResponse) {}
+    rpc DynamicQRCode(DynamicQRCodeRequest) returns (DynamicQRCodeResponse) {}
+    rpc StkPush(StkPushRequest) returns (StkPushResponse) {}
+    rpc StkPushCallback(StkPushCallbackRequest) returns (StkPushCallbackResponse) {}
+    rpc StkPushQuery(StkPushQueryRequest) returns (StkPushQueryResponse) {}
+    rpc CustomerToBusinessPayment(CustomerToBusinessPaymentRequest) returns (CustomerToBusinessPaymentResponse) {}
+    rpc CustomerToBusinessPaymentResult(CustomerToBusinessPaymentResultRequest) returns (CustomerToBusinessPaymentResultResponse) {}
+    rpc BusinessToCustomerPayment(BusinessToCustomerPaymentRequest) returns (BusinessToCustomerPaymentResponse) {}
+    rpc BusinessToCustomerPaymentResult(BusinessToCustomerPaymentResultRequest) returns (BusinessToCustomerPaymentResultResponse) {}
+    rpc TransactionStatus(TransactionStatusRequest) returns (TransactionStatusResponse) {}
+    rpc AccountBalance(AccountBalanceRequest) returns (AccountBalanceResponse) {}
+    rpc AccountBalanceCallback(AccountBalanceCallbackRequest) returns (AccountBalanceCallbackResponse) {}
+    rpc Reversal(ReversalRequest) returns (ReversalResponse) {}
+}
+
+// Authorization <<- https://developer.safaricom.co.ke/APIs/Authorization ->
+
+message AuthorizationSuccessResponse {
+    string expiry_in = 1;
+    string access_token = 2;
+}
+
+message AuthorizationErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message AuthorizationExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message AuthorizationRequest {
+    string consumer_key = 1;
+    string consumer_secret = 2;
+    string grant_type = 3;
+}
+
+message AuthorizationResponse {
+    bool successful = 1;
+    oneof result {
+        AuthorizationSuccessResponse success = 2;
+        AuthorizationErrorResponse error = 3;
+        AuthorizationExceptionResponse exception = 4;
+    }
+}
+
+// Dynamic QR Code <<- https://developer.safaricom.co.ke/APIs/DynamicQRCode ->>
+
+message DynamicQRCodeSuccessResponse {
+    string response_code = 1;
+    string response_description = 2;
+    string qr_code = 3;
+}
+
+message DynamicQRCodeErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message DynamicQRCodeExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message DynamicQRCodeRequest {
+    string qr_version = 1;
+    string trx_code = 2;
+    string cpi = 3;
+    string merchant_name = 4;
+    string amount = 5;
+    string ref_no = 6;
+    int32 qr_format = 7;
+    string qr_type = 8;
+}
+
+message DynamicQRCodeResponse {
+    bool successful = 1;
+    oneof result {
+        DynamicQRCodeSuccessResponse success = 2;
+        DynamicQRCodeErrorResponse error = 3;
+        DynamicQRCodeExceptionResponse exception = 4;
+    }
+}
+
+// Stk Push <<- https://developer.safaricom.co.ke/APIs/MpesaExpressSimulate ->>
+
+message StkPushSuccessResponse {
+    string merchant_request_id = 1;
+    string checkout_request_id = 2;
+    string response_description = 3;
+    string response_code = 4;
+    string customer_message = 5;
+}
+
+message StkPushErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message StkPushExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message StkPushRequest {
+    int32 business_short_code = 1;
+    string password = 2; // base64.encode(Shortcode+Passkey+Timestamp)
+    google.protobuf.Timestamp timestamp = 3; // YYYYMMDDHHmmss
+    string transaction_type = 4;
+    int32 amount = 5;
+    int32 party_a = 6;
+    int32 party_b = 7;
+    int32 phone_number = 8;
+    string call_back_url = 9;
+    string account_reference = 10;
+    string transaction_desc = 11;
+}
+
+message StkPushResponse {
+    bool successful = 1;
+    oneof result {
+        StkPushSuccessResponse success = 2;
+        StkPushErrorResponse error = 3;
+        StkPushExceptionResponse exception = 4;
+    }
+}
+
+// Stk Push Callback <<- https://developer.safaricom.co.ke/APIs/MpesaExpressSimulate ->>
+
+message Callback {
+    string merchant_request_id = 1;
+    string checkout_request_id = 2;
+    string result_desc = 3;
+    string result_code = 4;
+}
+
+message Dataset {
+    string name = 1;
+    string value = 2;
+}
+
+message Metadata {
+    repeated Dataset dataset_array = 1;
+}
+
+message StkPushCallbackSuccessResponse {
+    Callback callback = 1;
+    Metadata metadata = 2;
+}
+
+message StkPushCallbackErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message StkPushCallbackExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message StkPushCallbackRequest {
+    Callback callback = 1;
+    Metadata metadata = 2;
+}
+
+message StkPushCallbackResponse {
+    bool successful = 1;
+    oneof result {
+        StkPushCallbackSuccessResponse success = 2;
+        StkPushCallbackErrorResponse error = 3;
+        StkPushCallbackExceptionResponse exception = 4;
+    }
+}
+
+// Stk Push Query <<- https://developer.safaricom.co.ke/APIs/MpesaExpressQuery ->>
+
+message StkPushQuerySuccessResponse {
+    string merchant_request_id = 1;
+    string checkout_request_id = 2;
+    string response_code = 3;
+    string result_desc = 4;
+    string response_description = 5;
+    string result_code = 6;
+}
+
+message StkPushQueryErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message StkPushQueryExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message StkPushQueryRequest {
+    int32 business_short_code = 1;
+    string password = 2; // base64.encode(Shortcode+Passkey+Timestamp)
+    google.protobuf.Timestamp timestamp = 3; // YYYYMMDDHHmmss
+    string checkout_request_id = 4;
+}
+
+message StkPushQueryResponse {
+    bool successful = 1;
+    oneof result {
+        StkPushQuerySuccessResponse success = 2;
+        StkPushQueryErrorResponse error = 3;
+        StkPushQueryExceptionResponse exception = 4;
+    }
+}
+
+// Customer to Business Register URL <<- https://developer.safaricom.co.ke/APIs/CustomerToBusinessRegisterURL ->>
+
+message CustomerToBusinessRegisterUrlSuccessResponse {
+    string originator_conversation_id = 1;
+    string conversation_id = 2;
+    string response_description = 3;
+}
+
+message CustomerToBusinessRegisterUrlErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message CustomerToBusinessRegisterUrlExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message CustomerToBusinessRegisterUrlRequest {
+    string validation_url = 1;
+    string confirmation_url = 2;
+    string response_type = 3;
+    int32 short_code = 4;
+}
+
+message CustomerToBusinessRegisterUrlResponse {
+    bool successful = 1;
+    oneof result {
+        CustomerToBusinessRegisterUrlSuccessResponse success = 2;
+        CustomerToBusinessRegisterUrlErrorResponse error = 3;
+        CustomerToBusinessRegisterUrlExceptionResponse exception = 4;
+    }
+}
+
+// Customer to Business Payment <<- https://developer.safaricom.co.ke/APIs/CustomerToBusinessSimulate ->>
+
+message CustomerToBusinessPaymentSuccessResponse {
+    string originator_conversation_id = 1;
+    string conversation_id = 2;
+    string response_description = 3;
+}
+
+message CustomerToBusinessPaymentErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message CustomerToBusinessPaymentExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message CustomerToBusinessPaymentRequest {
+    string command_id = 1;
+    int32 amount = 2;
+    int32 msisdn = 3;
+    string bill_ref_number = 4;
+    int32 short_code = 5;
+}
+
+message CustomerToBusinessPaymentResponse {
+    bool successful = 1;
+    oneof result {
+        CustomerToBusinessPaymentSuccessResponse success = 2;
+        CustomerToBusinessPaymentErrorResponse error = 3;
+        CustomerToBusinessPaymentExceptionResponse exception = 4;
+    }
+}
+
+// Customer to Business Payment Result <<- https://developer.safaricom.co.ke/APIs/CustomerToBusinessSimulate ->>
+
+message CustomerToBusinessPaymentResultSuccessResponse {
+    string transaction_type = 1;
+    string trans_id = 2;
+    google.protobuf.Timestamp trans_time = 3;
+    int32 trans_amount = 4;
+    string business_short_code = 5;
+    string bill_ref_number = 6;
+    int32 org_account_balance = 7;
+    string third_party_trans_id = 8;
+    string msisdn = 9;
+    string first_name = 10;
+    string middle_name = 11;
+    string last_name =12;
+}
+
+message CustomerToBusinessPaymentResultErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message CustomerToBusinessPaymentResultExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message CustomerToBusinessPaymentResultRequest {
+    string transaction_type = 1;
+    string trans_id = 2;
+    google.protobuf.Timestamp trans_time = 3;
+    int32 trans_amount = 4;
+    string business_short_code = 5;
+    string bill_ref_number = 6;
+    int32 org_account_balance = 7;
+    string third_party_trans_id = 8;
+    string msisdn = 9;
+    string first_name = 10;
+    string middle_name = 11;
+    string last_name =12;
+}
+
+message CustomerToBusinessPaymentResultResponse {
+    bool successful = 1;
+    oneof result {
+        CustomerToBusinessPaymentResultSuccessResponse success = 2;
+        CustomerToBusinessPaymentResultErrorResponse error = 3;
+        CustomerToBusinessPaymentResultExceptionResponse exception = 4;
+    }
+}
+
+// Business to Customer Payment <<- https://developer.safaricom.co.ke/APIs/BusinessToCustomer ->>
+
+message BusinessToCustomerPaymentSuccessResponse {
+    string originator_conversation_id = 1;
+    string conversation_id = 2;
+    string response_description = 3;
+}
+
+message BusinessToCustomerPaymentErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message BusinessToCustomerPaymentExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message BusinessToCustomerPaymentRequest {
+    string initiator_name = 1;
+    string security_credential = 2;
+    string command_id = 3;
+    int32 amount = 4;
+    int32 party_a = 5;
+    int32 party_b = 6;
+    string remarks = 7;
+    string queue_time_out_url = 8;
+    string result_url = 9;
+    string occasion = 10;
+}
+
+message BusinessToCustomerPaymentResponse {
+    bool successful = 1;
+    oneof result {
+        BusinessToCustomerPaymentSuccessResponse success = 2;
+        BusinessToCustomerPaymentErrorResponse error = 3;
+        BusinessToCustomerPaymentExceptionResponse exception = 4;
+    }
+}
+
+// Business to Customer Payment Result <<- https://developer.safaricom.co.ke/APIs/BusinessToCustomer ->>
+
+message BusinessToCustomerPaymentResultSuccessResponse {
+    string conversation_id = 1;
+    string originator_conversation_id = 2;
+    string result_desc = 3;
+    int32 result_type = 4;
+    int32 result_code = 5;
+    string transaction_id = 6;
+    string transaction_receipt = 7;
+    int32 transaction_amount = 8;
+    int32 b2c_working_account_available_funds = 9;
+    int32 b2c_utility_account_available_funds = 10;
+    string transaction_completed_date_time = 11;
+    string receiver_party_public_name = 12;
+    int32 b2c_charges_paid_account_available_funds = 13;
+    string b2c_RecipientIsRegisteredCustomer = 14;
+}
+
+message BusinessToCustomerPaymentResultErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message BusinessToCustomerPaymentResultExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message BusinessToCustomerPaymentResultRequest {
+    string conversation_id = 1;
+    string originator_conversation_id = 2;
+    string result_desc = 3;
+    int32 result_type = 4;
+    int32 result_code = 5;
+    string transaction_id = 6;
+    string transaction_receipt = 7;
+    int32 transaction_amount = 8;
+    int32 b2c_working_account_available_funds = 9;
+    int32 b2c_utility_account_available_funds = 10;
+    string transaction_completed_date_time = 11;
+    string receiver_party_public_name = 12;
+    int32 b2c_charges_paid_account_available_funds = 13;
+    string b2c_RecipientIsRegisteredCustomer = 14;
+}
+
+message BusinessToCustomerPaymentResultResponse {
+    bool successful = 1;
+    oneof result {
+        BusinessToCustomerPaymentResultSuccessResponse success = 2;
+        BusinessToCustomerPaymentResultErrorResponse error = 3;
+        BusinessToCustomerPaymentResultExceptionResponse exception = 4;
+    }
+}
+
+// Transaction Status <<- https://developer.safaricom.co.ke/APIs/TransactionStatus ->>
+
+message TransactionStatusSuccessResponse {
+    string originator_conversation_id = 1;
+    string conversation_id = 2;
+    string response_description = 3;
+}
+
+message TransactionStatusErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message TransactionStatusExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message TransactionStatusRequest {
+    string command_id = 1;
+    int32 party_a = 2;
+    int32 identifier_type = 3;
+    string remarks = 4;
+    string initiator = 5;
+    string security_credential = 6;
+    string queue_time_out_url = 7;
+    string result_url = 8;
+    string transaction_id = 9;
+    string occasion = 10;
+}
+
+message TransactionStatusResponse {
+    bool successful = 1;
+    oneof result {
+        TransactionStatusSuccessResponse success = 2;
+        TransactionStatusErrorResponse error = 3;
+        TransactionStatusExceptionResponse exception = 4;
+    }
+}
+
+// Account Balance <<- https://developer.safaricom.co.ke/APIs/AccountBalance ->>
+
+message AccountBalanceSuccessResponse {
+    string originator_conversation_id = 1;
+    string conversation_id = 2;
+    string response_description = 3;
+}
+
+message AccountBalanceErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message AccountBalanceExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message AccountBalanceRequest {
+    string command_id = 1;
+    int32 party_a = 2;
+    int32 identifier_type = 3;
+    string remarks = 4;
+    string initiator = 5;
+    string security_credential = 6;
+    string queue_time_out_url = 7;
+    string result_url = 8;
+}
+
+message AccountBalanceResponse {
+    bool successful = 1;
+    oneof result {
+        AccountBalanceSuccessResponse success = 2;
+        AccountBalanceErrorResponse error = 3;
+        AccountBalanceExceptionResponse exception = 4;
+    }
+}
+
+// Account Balance Callback <<- https://developer.safaricom.co.ke/APIs/AccountBalance ->>
+
+message AccountBalanceCallbackSuccessResponse {
+    int32 result_type = 1;
+    int32 result_code = 2;
+    string result_desc = 3;
+    string originator_converstion_id = 4;
+    string conversation_id = 5;
+    string transaction_id = 6;
+    Metadata parameters = 7;
+}
+
+message AccountBalanceCallbackErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message AccountBalanceCallbackExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message AccountBalanceCallbackRequest {
+    int32 result_type = 1;
+    int32 result_code = 2;
+    string result_desc = 3;
+    string originator_converstion_id = 4;
+    string conversation_id = 5;
+    string transaction_id = 6;
+    Metadata parameters = 7;
+}
+
+message AccountBalanceCallbackResponse {
+    bool successful = 1;
+    oneof result {
+        AccountBalanceCallbackSuccessResponse success = 2;
+        AccountBalanceCallbackErrorResponse error = 3;
+        AccountBalanceCallbackExceptionResponse exception = 4;
+    }
+}
+
+// Reversal <<- https://developer.safaricom.co.ke/APIs/Reversal ->>
+
+message ReversalSuccessResponse {
+    string originator_conversation_id = 1;
+    string conversation_id = 2;
+    string response_description = 3;
+}
+
+message ReversalErrorResponse {
+    string request_id = 1;
+    string error_code = 2;
+    string error_message = 3;
+}
+
+message ReversalExceptionResponse {
+    string exception_code = 1;
+    string exception_message = 2;
+}
+
+message ReversalRequest {
+    string command_id = 1;
+    int32 receiver_party = 2;
+    int32 receiver_identifier_type = 3;
+    string remarks = 4;
+    string initiator = 5;
+    string security_credential = 6;
+    string queue_time_out_url = 7;
+    string result_url = 8;
+    string transaction_id = 9;
+    string occasion = 10;
+}
+
+message ReversalResponse {
+    bool successful = 1;
+    oneof result {
+        ReversalSuccessResponse success = 2;
+        ReversalErrorResponse error = 3;
+        ReversalExceptionResponse exception = 4;
+    }
+}
